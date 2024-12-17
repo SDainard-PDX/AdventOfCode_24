@@ -1,0 +1,90 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
+
+#define FILE_IN "../t1data.txt"
+
+using namespace std;
+
+bool descending(vector<int> data) {
+    int y = 0;
+    for (int x = 1; x < data.size(); x++) {
+        if(data[x-1] < data[x]) y++;
+        else y--;
+        if ( abs(y) == 2 ) break;
+    }
+    if (y == 2) return false;
+    return true;
+}
+
+bool checkgood(vector<int> data, bool decent) {
+    for (int x = 0; x < data.size()-1; ++x) {
+        if ( abs(data[x] - data[x+1]) > 3 ||
+            data[x] == data[x+1] ||
+            (decent && data[x] < data[x+1]) ||
+            (!decent && data[x] > data[x+1]) )
+            return false;
+    }
+    return true;
+}
+
+int main() {
+    //variables
+    bool verb = 0;
+    int rnd = 1, total = 0;
+    string line;
+
+    ifstream in_file(FILE_IN);
+    if (!in_file.is_open()) {
+        cout << "failed to open file" << endl;
+        return EXIT_FAILURE;
+    }
+
+    while (!in_file.eof()) {
+        getline(in_file, line);
+        stringstream ln;
+        ln << line;
+        bool descent = false;
+        vector<int> reports;
+
+        //put single line in a vector
+        while (ln.peek() != -1) {
+            int x = 0;
+            ln >> x;
+            reports.push_back(x);
+        }
+
+        //determine direction
+        descent = descending(reports);
+        if(verb) cout << rnd << "(" << total << ")";
+        if (verb && descent) { cout << " Des: "; }
+        else if (verb) { cout << " Asc: "; }
+
+        //check if it just passes
+        if (checkgood(reports,descent)) {
+            total++;
+            if(verb) cout << "Safe 1";
+        } else {
+            int n = reports.size();
+            for(int x = 0; x < n; ++x) {
+                vector<int> modreps = reports;
+                modreps.erase(modreps.begin() + x);
+                if (checkgood(modreps,descent)) {
+                    if(verb) cout << "Safe 2";
+                    total++;
+                    break;
+                }
+            }
+        }
+
+        rnd++;
+        if(verb) cout << endl;
+    }
+
+    cout << "\nTot = " << total << endl;
+
+    in_file.close();
+    return EXIT_SUCCESS;
+}
